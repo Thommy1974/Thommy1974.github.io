@@ -100,3 +100,109 @@
   color: #f87171;
 }
 
+.timer-btns {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-top: 0.5rem;
+}
+
+/* Scrollbar personalizado */
+::-webkit-scrollbar {
+  width: 8px;
+  background: #1e293b;
+}
+::-webkit-scrollbar-thumb {
+  background: #374151;
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #4b5563;
+}
+
+/* Botones generales */
+button {
+  transition: background 0.2s, box-shadow 0.2s;
+  outline: none;
+}
+button:active {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+/* Cards */
+.card {
+  background: #23272f;
+  border-radius: 1rem;
+  box-shadow: 0 4px 24px 0 rgba(0,0,0,0.18);
+  overflow: hidden;
+  position: relative;
+  transition: box-shadow 0.3s;
+}
+.card:hover {
+  box-shadow: 0 8px 32px 0 rgba(0,0,0,0.28);
+}
+
+/* Overlay */
+.overlay {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 1rem;
+  background: rgba(0,0,0,0.6);
+  transition: opacity 0.4s;
+}
+
+/* Timer texto */
+.text-red-500 {
+  color: #ef4444 !important;
+}
+.text-green-500 {
+  color: #22c55e !important;
+}
+.text-blue-500 {
+  color: #3b82f6 !important;
+}
+
+/* Responsive grid */
+@media (max-width: 640px) {
+  #cards {
+    grid-template-columns: 1fr !important;
+  }
+}
+@media (min-width: 641px) and (max-width: 1023px) {
+  #cards {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
+@media (min-width: 1024px) {
+  #cards {
+    grid-template-columns: 1fr 1fr 1fr !important;
+  }
+}
+
+/* Sidebar */
+#sidebar {
+  box-shadow: 0 0 24px 0 rgba(0,0,0,0.25);
+}
+
+/* Overlay de fondo */
+#overlay {
+  backdrop-filter: blur(2px);
+}
+
+/* Botón hamburguesa */
+#hamburgerBtn {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+}
+
+/* Animación para easter egg */
+.easter-egg {
+  cursor: pointer;
+  transition: color 0.2s;
+}
+.easter-egg:hover {
+  color: #22c55e;
+}
+
