@@ -240,12 +240,24 @@ function stopTimer(i) {
   aplicarFiltros();
 }
 
-// Exportar timers: genera un JSON con el estado de todos los timers
+// Exportar timers: guarda el estado real de cada timer antes de exportar
 function exportarTimers() {
   const data = {};
   for (let i = 0; i < totalCasas; i++) {
-    const timer = localStorage.getItem(`timer-${i}`);
-    if (timer) data[`timer-${i}`] = JSON.parse(timer);
+    let timer = localStorage.getItem(`timer-${i}`);
+    if (timer) {
+      timer = JSON.parse(timer);
+      // Si está corriendo, recalcula el tiempo restante real
+      if (timer.running && timer.startTime && typeof timer.totalDuration === "number") {
+        const elapsed = Math.floor((Date.now() - timer.startTime) / 1000);
+        if (!timer.extended && !timer.negative) {
+          timer.duration = Math.max(timer.totalDuration - elapsed, 0);
+        } else {
+          timer.duration = -1 * (elapsed - timer.totalDuration);
+        }
+      }
+      data[`timer-${i}`] = timer;
+    }
   }
   return JSON.stringify(data, null, 2);
 }
@@ -253,7 +265,16 @@ function exportarTimers() {
 // UI para exportar: muestra el JSON en un modal estilizado y lo copia al portapapeles
 function exportarTimersUI() {
   const json = exportarTimers();
-  // Crear modal simple
+  mostrarModalJson("Copia este JSON para compartir tus timers:", json);
+}
+
+// UI para importar: muestra un modal estilizado para pegar el JSON
+function mostrarImportarTimers() {
+  mostrarModalJsonImportar();
+}
+
+// Modal para mostrar/copy JSON (exportar)
+function mostrarModalJson(labelText, json) {
   let modal = document.createElement('div');
   modal.style.position = 'fixed';
   modal.style.top = '0';
@@ -275,7 +296,7 @@ function exportarTimersUI() {
   box.style.width = '400px';
 
   let label = document.createElement('div');
-  label.textContent = "Copia este JSON para compartir tus timers:";
+  label.textContent = labelText;
   label.style.color = '#fff';
   label.style.marginBottom = '8px';
 
@@ -308,56 +329,81 @@ function exportarTimersUI() {
   document.execCommand('copy');
 }
 
-// Mostrar área de importación
-function mostrarImportarTimers() {
-  document.getElementById('importar-timers-area').classList.remove('hidden');
-  document.getElementById('importar-timers-json').value = '';
-  document.getElementById('importar-timers-error').textContent = '';
-}
+// Modal para importar JSON (igual visual que exportar)
+function mostrarModalJsonImportar() {
+  let modal = document.createElement('div');
+  modal.style.position = 'fixed';
+  modal.style.top = '0';
+  modal.style.left = '0';
+  modal.style.width = '100vw';
+  modal.style.height = '100vh';
+  modal.style.background = 'rgba(0,0,0,0.7)';
+  modal.style.display = 'flex';
+  modal.style.alignItems = 'center';
+  modal.style.justifyContent = 'center';
+  modal.style.zIndex = '9999';
 
-// Ocultar área de importación
-function ocultarImportarTimers() {
-  document.getElementById('importar-timers-area').classList.add('hidden');
-  document.getElementById('importar-timers-json').value = '';
-  document.getElementById('importar-timers-error').textContent = '';
-}
+  let box = document.createElement('div');
+  box.style.background = '#1e293b';
+  box.style.borderRadius = '12px';
+  box.style.padding = '24px';
+  box.style.boxShadow = '0 4px 24px 0 rgba(0,0,0,0.25)';
+  box.style.maxWidth = '90vw';
+  box.style.width = '400px';
 
-// Mostrar solo los timers activos si el checkbox está marcado
-function filtrarActivos() {
-  aplicarFiltros();
-}
+  let label = document.createElement('div');
+  label.textContent = "Pega aquí el JSON de los timers:";
+  label.style.color = '#fff';
+  label.style.marginBottom = '8px';
 
-// Aplica los filtros de activos y ciudad (si existe el filtro de ciudad)
-function aplicarFiltros() {
-  const soloActivos = document.getElementById("toggle-activos")?.checked;
-  const ciudadSeleccionada = document.getElementById("ciudad-filter")?.value;
-  const cards = document.querySelectorAll(".card");
-  cards.forEach(card => {
-    const activo = card.classList.contains("active-timer");
-    const ciudad = card.getAttribute("data-ciudad");
-    let visible = true;
-    if (soloActivos && !activo) visible = false;
-    if (ciudadSeleccionada && ciudadSeleccionada !== "Todas" && ciudad !== ciudadSeleccionada) visible = false;
-    card.style.display = visible ? "block" : "none";
-  });
-}
+  let area = document.createElement('textarea');
+  area.placeholder = "Pega aquí el JSON de los timers";
+  area.style.width = '100%';
+  area.style.height = '180px';
+  area.style.background = '#0f172a';
+  area.style.color = '#fff';
+  area.style.border = '1px solid #334155';
+  area.style.borderRadius = '8px';
+  area.style.padding = '10px';
+  area.style.fontFamily = 'Fira Mono, Consolas, monospace';
+  area.style.fontSize = '1rem';
+  area.style.marginBottom = '12px';
 
-// Importar timers desde el área de texto
-function importarTimersUI() {
-  const json = document.getElementById('importar-timers-json').value;
-  let data;
-  try {
-    data = JSON.parse(json);
-  } catch (e) {
-    document.getElementById('importar-timers-error').textContent = 'JSON inválido.';
-    return;
-  }
-  for (let i = 0; i < totalCasas; i++) {
-    const key = `timer-${i}`;
-    if (data[key]) {
-      localStorage.setItem(key, JSON.stringify(data[key]));
+  let errorDiv = document.createElement('div');
+  errorDiv.style.color = '#f87171';
+  errorDiv.style.marginBottom = '8px';
+
+  let btnImportar = document.createElement('button');
+  btnImportar.textContent = 'Importar';
+  btnImportar.className = 'bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded shadow transition w-full mb-2';
+  btnImportar.onclick = () => {
+    let json = area.value;
+    let data;
+    try {
+      data = JSON.parse(json);
+    } catch (e) {
+      errorDiv.textContent = 'JSON inválido.';
+      return;
     }
+    for (let i = 0; i < totalCasas; i++) {
+      const key = `timer-${i}`;
+      if (data[key]) {
+        localStorage.setItem(key, JSON.stringify(data[key]));
+      }
+    }
+    document.body.removeChild(modal);
+    location.reload();
+  };
+
+  let btnCerrar = document.createElement('button');
+  btnCerrar.textContent = 'Cancelar';
+    btnCerrar.className = 'bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded shadow transition w-full';
+  
+    box.appendChild(label);
+    box.appendChild(area);
+    box.appendChild(errorDiv);
+    box.appendChild(btnImportar);
+    box.appendChild(btnCerrar);
+    modal.appendChild(box);
+    document.body.appendChild(modal);
   }
-  // Recargar para que la lógica de timers y clases activas se aplique correctamente
-  location.reload();
-}
