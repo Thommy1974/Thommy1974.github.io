@@ -1,3 +1,5 @@
+// script.js
+
 const totalCasas = 12;
 const alarmSound = document.getElementById("alarm-sound");
 const alarmaUnicaSound = document.getElementById("alarma-unica-sound");
@@ -14,14 +16,12 @@ const timers = Array(totalCasas).fill(null);
 const extended = Array(totalCasas).fill(false);
 const negatives = Array(totalCasas).fill(false);
 
-// Flags para evitar múltiples reproducciones de alertas
 const alertaPreviaPlayed = Array(totalCasas).fill(false);
 const alertaNegativa1Played = Array(totalCasas).fill(false);
 const alertaNegativa2Played = Array(totalCasas).fill(false);
 
-// Guardar el tiempo de inicio y duración total
 const startTimes = Array(totalCasas).fill(null);
-const totalDurations = Array(totalCasas).fill(35 * 60); // segundos
+const totalDurations = Array(totalCasas).fill(35 * 60);
 
 window.addEventListener("load", () => {
   for (let i = 0; i < totalCasas; i++) {
@@ -31,7 +31,6 @@ window.addEventListener("load", () => {
       negatives[i] = saved.negative || false;
       startTimes[i] = saved.startTime || null;
       totalDurations[i] = saved.totalDuration || 35 * 60;
-      // Si el timer estaba corriendo, restaurar
       if (saved.running) startTimer(i, true);
       else updateTimerDisplay(i, saved.duration ?? 35 * 60);
     } else {
@@ -101,23 +100,21 @@ function startTimer(i, restoring = false) {
     card.classList.add("active-timer");
     card.setAttribute("data-activo", "true");
     const overlay = card.querySelector(".overlay");
-    // Elimina contenedor anterior si existe
     let btnsContainer = overlay.querySelector(".timer-btns");
     if (btnsContainer) btnsContainer.remove();
-    // Crea contenedor flex para los botones
     btnsContainer = document.createElement("div");
     btnsContainer.className = "timer-btns flex gap-2 mt-2";
-    // Botón Reiniciar
+
     const btnRestart = document.createElement("button");
     btnRestart.textContent = "Reiniciar";
     btnRestart.className = "btn-restart bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-1 px-3 rounded";
     btnRestart.onclick = () => restartTimer(i);
-    // Botón Detener
+
     const btnStop = document.createElement("button");
     btnStop.textContent = "Detener";
     btnStop.className = "btn-stop bg-red-600 hover:bg-red-700 text-white font-bold py-1 px-3 rounded";
     btnStop.onclick = () => stopTimer(i);
-    // Añade ambos al contenedor
+
     btnsContainer.appendChild(btnRestart);
     btnsContainer.appendChild(btnStop);
     overlay.appendChild(btnsContainer);
@@ -132,7 +129,6 @@ function startTimer(i, restoring = false) {
       remaining = -1 * (elapsed - totalDurations[i]);
     }
 
-    // ALERTA PREVIA y NEGATIVAS usan el mismo sonido ahora
     if (!negatives[i] && remaining === 10 && !alertaPreviaPlayed[i]) {
       alarmaUnicaSound.currentTime = 0;
       alarmaUnicaSound.play();
@@ -151,7 +147,6 @@ function startTimer(i, restoring = false) {
       }
     }
 
-    // Cambio de estado
     if (!negatives[i]) {
       if (remaining === 0 && !extended[i]) {
         alarmSound.play();
@@ -229,7 +224,6 @@ function stopTimer(i) {
   if (card) {
     card.classList.remove("active-timer");
     card.setAttribute("data-activo", "false");
-    // Quitar contenedor de botones si existe
     const overlay = card.querySelector(".overlay");
     if (overlay) {
       const btnsContainer = overlay.querySelector(".timer-btns");
@@ -240,14 +234,13 @@ function stopTimer(i) {
   aplicarFiltros();
 }
 
-// Exportar timers: guarda el estado real de cada timer antes de exportar
+// ---- Exportar / Importar ----
 function exportarTimers() {
   const data = {};
   for (let i = 0; i < totalCasas; i++) {
     let timer = localStorage.getItem(`timer-${i}`);
     if (timer) {
       timer = JSON.parse(timer);
-      // Si está corriendo, recalcula el tiempo restante real
       if (timer.running && timer.startTime && typeof timer.totalDuration === "number") {
         const elapsed = Math.floor((Date.now() - timer.startTime) / 1000);
         if (!timer.extended && !timer.negative) {
@@ -262,18 +255,15 @@ function exportarTimers() {
   return JSON.stringify(data, null, 2);
 }
 
-// UI para exportar: muestra el JSON en un modal estilizado y lo copia al portapapeles
 function exportarTimersUI() {
   const json = exportarTimers();
   mostrarModalJson("Copia este JSON para compartir tus timers:", json);
 }
 
-// UI para importar: muestra un modal estilizado para pegar el JSON
 function mostrarImportarTimers() {
   mostrarModalJsonImportar();
 }
 
-// Modal para mostrar/copy JSON (exportar)
 function mostrarModalJson(labelText, json) {
   let modal = document.createElement('div');
   modal.style.position = 'fixed';
@@ -329,7 +319,6 @@ function mostrarModalJson(labelText, json) {
   document.execCommand('copy');
 }
 
-// Modal para importar JSON (igual visual que exportar)
 function mostrarModalJsonImportar() {
   let modal = document.createElement('div');
   modal.style.position = 'fixed';
@@ -397,13 +386,13 @@ function mostrarModalJsonImportar() {
 
   let btnCerrar = document.createElement('button');
   btnCerrar.textContent = 'Cancelar';
-    btnCerrar.className = 'bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded shadow transition w-full';
-  
-    box.appendChild(label);
-    box.appendChild(area);
-    box.appendChild(errorDiv);
-    box.appendChild(btnImportar);
-    box.appendChild(btnCerrar);
-    modal.appendChild(box);
-    document.body.appendChild(modal);
-  }
+  btnCerrar.className = 'bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded shadow transition w-full';
+
+  box.appendChild(label);
+  box.appendChild(area);
+  box.appendChild(errorDiv);
+  box.appendChild(btnImportar);
+  box.appendChild(btnCerrar);
+  modal.appendChild(box);
+  document.body.appendChild(modal);
+}
