@@ -1,4 +1,106 @@
-// script.js
+
+function mostrarModalJsonImportar() {
+  try {
+    let modal = document.createElement('div');
+    modal.style.position = 'fixed';
+    modal.style.top = '0';
+    modal.style.left = '0';
+    modal.style.width = '100vw';
+    modal.style.height = '100vh';
+    modal.style.background = 'rgba(0,0,0,0.7)';
+    modal.style.display = 'flex';
+    modal.style.alignItems = 'center';
+    modal.style.justifyContent = 'center';
+    modal.style.zIndex = '9999';
+
+    let box = document.createElement('div');
+    box.style.background = '#1e293b';
+    box.style.borderRadius = '12px';
+    box.style.padding = '24px';
+    box.style.boxShadow = '0 4px 24px 0 rgba(0,0,0,0.25)';
+    box.style.maxWidth = '90vw';
+    box.style.width = '400px';
+
+    let label = document.createElement('div');
+    label.textContent = "Pega aquí el JSON de los timers:";
+    label.style.color = '#fff';
+    label.style.marginBottom = '8px';
+
+    let area = document.createElement('textarea');
+    area.placeholder = "Pega aquí el JSON de los timers";
+    area.style.width = '100%';
+    area.style.height = '180px';
+    area.style.background = '#0f172a';
+    area.style.color = '#fff';
+    area.style.border = '1px solid #334155';
+    area.style.borderRadius = '8px';
+    area.style.padding = '10px';
+    area.style.fontFamily = 'Fira Mono, Consolas, monospace';
+    area.style.fontSize = '1rem';
+    area.style.marginBottom = '12px';
+
+    let errorDiv = document.createElement('div');
+    errorDiv.style.color = '#f87171';
+    errorDiv.style.marginBottom = '8px';
+
+    let btnImportar = document.createElement('button');
+    btnImportar.textContent = 'Importar';
+    btnImportar.className = 'bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded shadow transition w-full mb-2';
+    btnImportar.onclick = () => {
+      try {
+        let json = area.value.trim();
+        
+        // Si está vacío, no hacer nada y mostrar error
+        if (!json) {
+          errorDiv.textContent = 'Por favor ingresa un JSON válido.';
+          return;
+        }
+        
+        let data;
+        try {
+          data = JSON.parse(json);
+        } catch (e) {
+          errorDiv.textContent = 'JSON inválido: ' + e.message;
+          return;
+        }
+        
+        for (let i = 0; i < totalCasas; i++) {
+          const key = `timer-${i}`;
+          if (data[key]) {
+            localStorage.setItem(key, JSON.stringify(data[key]));
+          }
+        }
+        document.body.removeChild(modal);
+        location.reload();
+      } catch (e) {
+        console.error("Error importing timers:", e);
+        errorDiv.textContent = 'Error al importar los timers.';
+      }
+    };
+
+    let btnCerrar = document.createElement('button');
+    btnCerrar.textContent = 'Cancelar';
+    btnCerrar.className = 'bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded shadow transition w-full';
+    btnCerrar.onclick = () => {
+      try {
+        document.body.removeChild(modal);
+      } catch (e) {
+        console.error("Error closing modal:", e);
+      }
+    };
+
+    box.appendChild(label);
+    box.appendChild(area);
+    box.appendChild(errorDiv);
+    box.appendChild(btnImportar);
+    box.appendChild(btnCerrar);
+    modal.appendChild(box);
+    document.body.appendChild(modal);
+    
+  } catch (e) {
+    console.error("Error creating import modal:", e);
+  }
+}// script.js
 
 const totalCasas = 12;
 const alarmSound = document.getElementById("alarm-sound");
@@ -234,6 +336,62 @@ function stopTimer(i) {
   aplicarFiltros();
 }
 
+// NUEVA FUNCIÓN: Filtrar timers activos
+function filtrarActivos() {
+  const toggleActivos = document.getElementById("toggle-activos");
+  const cards = document.querySelectorAll(".card");
+
+  cards.forEach(card => {
+    const esActivo = card.getAttribute("data-activo") === "true";
+    
+    if (toggleActivos.checked) {
+      // Mostrar solo activos
+      if (esActivo) {
+        card.style.display = "block";
+      } else {
+        card.style.display = "none";
+      }
+    } else {
+      // Mostrar todos, pero respetar el filtro de ciudad
+      card.style.display = "block";
+    }
+  });
+
+  // Aplicar también el filtro de ciudad si está activo
+  filtrarPorCiudad();
+}
+
+// NUEVA FUNCIÓN: Aplicar todos los filtros
+function aplicarFiltros() {
+  const ciudadSeleccionada = document.getElementById("ciudad-filter").value;
+  const toggleActivos = document.getElementById("toggle-activos");
+  const cards = document.querySelectorAll(".card");
+
+  cards.forEach(card => {
+    const ciudad = card.getAttribute("data-ciudad");
+    const esActivo = card.getAttribute("data-activo") === "true";
+    
+    let mostrar = true;
+
+    // Filtro por ciudad
+    if (ciudadSeleccionada !== "Todas" && ciudad !== ciudadSeleccionada) {
+      mostrar = false;
+    }
+
+    // Filtro por activos
+    if (toggleActivos.checked && !esActivo) {
+      mostrar = false;
+    }
+
+    card.style.display = mostrar ? "block" : "none";
+  });
+}
+
+// FUNCIÓN CORREGIDA: Filtrar por ciudad
+function filtrarPorCiudad() {
+  aplicarFiltros();
+}
+
 // ---- Exportar / Importar ----
 function exportarTimers() {
   const data = {};
@@ -366,7 +524,14 @@ function mostrarModalJsonImportar() {
   btnImportar.textContent = 'Importar';
   btnImportar.className = 'bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded shadow transition w-full mb-2';
   btnImportar.onclick = () => {
-    let json = area.value;
+    let json = area.value.trim();
+    
+    // Si está vacío, no hacer nada
+    if (!json) {
+      errorDiv.textContent = 'Por favor ingresa un JSON válido.';
+      return;
+    }
+    
     let data;
     try {
       data = JSON.parse(json);
@@ -374,6 +539,7 @@ function mostrarModalJsonImportar() {
       errorDiv.textContent = 'JSON inválido.';
       return;
     }
+    
     for (let i = 0; i < totalCasas; i++) {
       const key = `timer-${i}`;
       if (data[key]) {
@@ -387,6 +553,7 @@ function mostrarModalJsonImportar() {
   let btnCerrar = document.createElement('button');
   btnCerrar.textContent = 'Cancelar';
   btnCerrar.className = 'bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded shadow transition w-full';
+  btnCerrar.onclick = () => document.body.removeChild(modal);
 
   box.appendChild(label);
   box.appendChild(area);
