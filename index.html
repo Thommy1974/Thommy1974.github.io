@@ -42,19 +42,12 @@
       <button onclick="mostrarImportarTimers();toggleSidebar();" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded shadow transition w-full">
         Importar timers
       </button>
+      <button onclick="detenerTodosTimers();toggleSidebar();" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded shadow transition w-full">
+        Detener todos
+      </button>
     </div>
   </div>
 </aside>
-
-<script>
-  function toggleSidebar() {
-    const sidebar = document.getElementById("sidebar");
-    const overlay = document.getElementById("overlay");
-
-    sidebar.classList.toggle("-translate-x-full");
-    overlay.classList.toggle("hidden");
-  }
-</script>
 
   <div class="text-right text-white mb-1 mr-0">
     <span class="text-sm font-mono">Hora server: <span id="hora-server"></span></span>
@@ -63,15 +56,9 @@
     Temporiz<span class="easter-egg" onclick="redirectToVideo()">a</span>dores de Casas
 </h1>
 
-<script>
-    function redirectToVideo() {
-        window.location.href = "https://www.youtube.com/watch?v=_dXsRTbCqDg&t=1s";
-    }
-</script>
-
 <div class="flex justify-center mb-4 text-white">
   <label for="ciudad-filter" class="mr-2">Filtrar por ciudad:</label>
-  <select id="ciudad-filter" onchange="filtrarPorCiudad()" class="bg-gray-800 text-white rounded px-2 py-1">
+  <select id="ciudad-filter" onchange="aplicarFiltros()" class="bg-gray-800 text-white rounded px-2 py-1">
     <option value="Todas">Todas</option>
     <option value="Los Santos">Los Santos</option>
     <option value="San Fierro">San Fierro</option>
@@ -82,9 +69,13 @@
 <div class="flex items-center justify-center mb-4 gap-2 text-white">
   <label for="toggle-activos" class="text-sm">Mostrar solo activos</label>
   <label class="switch">
-    <input type="checkbox" id="toggle-activos" onchange="filtrarActivos()" />
+    <input type="checkbox" id="toggle-activos" onchange="aplicarFiltros()" />
     <span class="slider round"></span>
   </label>
+</div>
+
+<div class="text-center mb-4">
+  <span class="text-white text-sm">Timers activos: <span id="contador-activos" class="text-green-400 font-bold">0</span></span>
 </div>
 
 <div id="cards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -254,16 +245,31 @@
 <audio id="alarma-unica-sound" src="/public/assets/Casas/sonid.mp3" preload="auto"></audio>
 
 <script>
-    function actualizarHoraServer() {
-      const now = new Date().toLocaleTimeString('en-CA', {
-        timeZone: 'Canada/Eastern',
-        hour12: false
-      });
-      document.getElementById('hora-server').textContent = now;
-    }
-    setInterval(actualizarHoraServer, 1000);
-    actualizarHoraServer();
-</script>  
+function actualizarHoraServer() {
+  const now = new Date().toLocaleTimeString('en-CA', {
+    timeZone: 'Canada/Eastern',
+    hour12: false
+  });
+  document.getElementById('hora-server').textContent = now;
+}
+
+function redirectToVideo() {
+  window.location.href = "https://www.youtube.com/watch?v=_dXsRTbCqDg&t=1s";
+}
+
+function toggleSidebar() {
+  const sidebar = document.getElementById("sidebar");
+  const overlay = document.getElementById("overlay");
+  
+  sidebar.classList.toggle("-translate-x-full");
+  overlay.classList.toggle("hidden");
+}
+
+// Inicializar reloj del servidor
+setInterval(actualizarHoraServer, 1000);
+actualizarHoraServer();
+
+</script>
 
 <script src="script.js"></script>
 </body>
